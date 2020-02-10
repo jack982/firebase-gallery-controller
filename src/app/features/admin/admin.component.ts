@@ -8,12 +8,16 @@ import {Presentation} from '../../model/presentation';
 
     <!-- player -->
     <div class="center">
-      <img src="https://i.picsum.photos/id/10/600/400.jpg"
+      <img [src]="active"
             class="player-image">
       <div>
-        <button class="button">PREV</button>
-        <span class="counter">1 / 3</span>
-        <button class="button">NEXT</button>
+        <button class="button" 
+                (click)="prev()"
+                    [disabled]="current < 1">PREV</button>
+        <span class="counter">{{current + 1}} / {{items.length}}</span>
+        <button class="button"
+                (click)="next()"
+                [disabled]="current === items.length - 1">NEXT</button>
       </div>
     </div>
 
@@ -28,9 +32,11 @@ import {Presentation} from '../../model/presentation';
       </div>
     <div class="image-container">
     <div class="grid">
-        <div class="cell" *ngFor="let item of items">
-          <img class="responsive-image" [src]="item">
-          <span class="icon cursor">&#10006;</span>
+        <div class="cell" *ngFor="let item of items; trackBy: current ">
+          <img class="responsive-image" [src]="item"
+            (click)="setActive(index)">
+          <span class="icon cursor" (click)="deleteImage(item)"
+          title="Remove this image">&#10006;</span>
         </div>
     </div>
     </div>
@@ -41,21 +47,53 @@ import {Presentation} from '../../model/presentation';
 export class AdminComponent {
 
   items: string[] = [];
+  active: string;
+  current = 0;
 
   constructor(private db: AngularFireDatabase) {
     db.object<Presentation>('presentation')
       .valueChanges()
       .subscribe((res: Presentation) => {
         this.items = res.images;
+        if ( this.items ) {
+          this.setActive(0);
+        }
       });
   }
 
-  images: string[];
+  track(index, item) {
+    return item ? hero.id : undefined;
+
+  }
+
+  prev() {
+    if( this.current > 0 ) {
+      this.current -= 1;
+      this.setActive(this.current -= 1);
+    }
+  }
+
+  next() {
+    if( this.current <= this.items.length ) {
+      this.setActive( this.current += 1);
+    }
+  }
+
+  setActive(index: number) {
+    this.active = this.items[index];
+    this.current = index;
+  }
 
   addImage(tmbUrl: string) {
     console.log(tmbUrl);
     this.items = [...this.items, tmbUrl];
     this.db.object('presentation/images').set(this.items);
+  }
+
+  deleteImage(url: string) {
+    const index = this.items.findIndex(( i => i === url ));
+    this.items.splice(index, 1);
+    this.db.object( 'presentation/images' ).set(this.items);
   }
 
   generateRandomImage() {
