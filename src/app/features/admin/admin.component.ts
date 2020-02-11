@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {AngularFireDatabase} from '@angular/fire/database';
 import {Presentation} from '../../model/presentation';
+import {NgForm} from '@angular/forms';
 
 @Component({
   selector: 'app-admin',
@@ -25,17 +26,19 @@ import {Presentation} from '../../model/presentation';
     <div class="gallery">
 
       <div class="center">
-      <form #f="ngForm" (submit)="addImage(f.value.tmb)">
+      <form #f="ngForm" (submit)="addImage(f)">
         <input type="text" placeholder="Add a new image URL" [ngModel] name="tmb">
         <button class="button" type="button" (click)="generateRandomImage()">Generate image</button>
       </form>
       </div>
     <div class="image-container">
     <div class="grid">
-        <div class="cell" *ngFor="let item of items; trackBy: current ">
-          <img class="responsive-image" [src]="item"
-            (click)="setActive(index)">
-          <span class="icon cursor" (click)="deleteImage(item)"
+        <div class="cell" *ngFor="let item of items; let i = index;">
+          <img class="responsive-image"
+               [ngClass]="{ 'image-active' : current === i }"
+               [src]="item"
+            (click)="setActive(i)">
+          <span class="icon cursor" (click)="deleteImage(item, $event)"
           title="Remove this image">&#10006;</span>
         </div>
     </div>
@@ -61,45 +64,49 @@ export class AdminComponent {
       });
   }
 
-  track(index, item) {
-    return item ? hero.id : undefined;
-
-  }
-
   prev() {
     if( this.current > 0 ) {
-      this.current -= 1;
-      this.setActive(this.current -= 1);
+      this.setActive(this.current - 1);
     }
   }
 
   next() {
     if( this.current <= this.items.length ) {
-      this.setActive( this.current += 1);
+      this.setActive( this.current + 1);
     }
   }
 
   setActive(index: number) {
-    this.active = this.items[index];
     this.current = index;
+    this.active = this.items[this.current];
   }
 
-  addImage(tmbUrl: string) {
-    console.log(tmbUrl);
-    this.items = [...this.items, tmbUrl];
-    this.db.object('presentation/images').set(this.items);
+  addImage(form: NgForm, event: KeyboardEvent) {
+    event.preventDefault();
+    const tmbUrl = form.value.tmbUrl;
+    this.saveUrl(tmbUrl);
+    form.reset();
   }
 
-  deleteImage(url: string) {
+  deleteImage(url: string, event: MouseEvent) {
+    event.preventDefault();
     const index = this.items.findIndex(( i => i === url ));
     this.items.splice(index, 1);
+    const newActive = ( index === 0 ? 0 : index - 1);
+    this.setActive( newActive );
     this.db.object( 'presentation/images' ).set(this.items);
+
   }
 
   generateRandomImage() {
     const random = Math.floor(Math.random() * 200);
     const url = `https://i.picsum.photos/id/${random}/600/400.jpg`;
-    this.addImage( url );
+    this.saveUrl( url );
+  }
+
+  saveUrl(url: string) {
+    this.items = [...this.items, url];
+    this.db.object('presentation/images').set(this.items);
   }
 
 }

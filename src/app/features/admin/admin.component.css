@@ -80,3 +80,7 @@ input {
 .center {
   text-align: center;
 }
+
+.image-active {
+  border: 2px solid #f02;
+}
