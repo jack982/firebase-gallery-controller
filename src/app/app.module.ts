@@ -9,6 +9,7 @@ import {environment} from '../environments/environment';
 import {AngularFireModule} from '@angular/fire';
 import {AngularFireDatabaseModule} from '@angular/fire/database';
 import {FormsModule} from '@angular/forms';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import {FormsModule} from '@angular/forms';
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     AngularFireModule.initializeApp(environment.firebase, 'fb-demo-controller'),
     AngularFireDatabaseModule,
